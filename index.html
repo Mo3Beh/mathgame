@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>بازی ریاضی تفنگی</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- MediaPipe -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <video id="camera-feed" autoplay playsinline muted></video>
+    <canvas id="output_canvas"></canvas>
+
+    <!-- *** نشانگر انگشت (جدید) *** -->
+    <div id="finger-indicator"></div>
+
+    <div id="game-overlay">
+      <!-- ۱. انتخاب حالت بازی -->
+      <div id="game-mode-selection" class="prompt active">
+        <h2>انتخاب حالت بازی:</h2>
+        <div class="mode-buttons">
+          <button class="game-mode-btn" data-game-mode="free">
+            آزاد (تمرینی)
+          </button>
+          <button class="game-mode-btn" data-game-mode="challenge">
+            چالشی (امتیازی)
+          </button>
+          <button class="game-mode-btn" data-game-mode="speed">
+            سرعتی (۱ دقیقه)
+          </button>
+          <button class="game-mode-btn" data-game-mode="timeTrial">
+            زمانی (تا ۱۰ امتیاز)
+          </button>
+        </div>
+        <p style="font-size: 0.8em; margin-top: 15px">
+          حالت مورد نظر خود را انتخاب کنید.
+        </p>
+      </div>
+
+      <!-- ۲. انتخاب نوع عملیات ریاضی -->
+      <div id="math-mode-selection" class="prompt hidden">
+        <h2>انتخاب نوع سوالات (<span id="selected-game-mode-info"></span>):</h2>
+        <div class="mode-buttons">
+          <button class="math-mode-btn" data-math-mode="add2">
+            جمع ۲ رقمی
+          </button>
+          <button class="math-mode-btn" data-math-mode="add3">
+            جمع ۳ رقمی
+          </button>
+          <button class="math-mode-btn" data-math-mode="subtract2">
+            منها ۲ رقمی
+          </button>
+          <button class="math-mode-btn" data-math-mode="multiply">ضرب</button>
+          <button class="math-mode-btn" data-math-mode="divide">تقسیم</button>
+        </div>
+        <button id="back-to-game-mode" class="back-button">
+          بازگشت به انتخاب حالت
+        </button>
+      </div>
+
+      <!-- ۳. بخش اجازه دسترسی -->
+      <div id="permission-prompt" class="prompt hidden">
+        <h2 id="permission-title">به دوربین نیاز داریم!</h2>
+        <p>
+          برای شروع بازی (<span id="selected-math-mode-info"></span> -
+          <span id="selected-game-mode-info2"></span>)، لطفاً اجازه دسترسی به
+          دوربین را بدهید.
+        </p>
+        <p><i>در حال بارگذاری مدل تشخیص دست...</i></p>
+        <button id="start-button" disabled>لطفاً صبر کنید...</button>
+        <p id="error-message" class="error"></p>
+        <button id="back-to-math-mode" class="back-button">
+          بازگشت به انتخاب سوال
+        </button>
+      </div>
+
+      <!-- ۴. هدر اصلی بازی (با آمار) -->
+      <header id="main-header" class="hidden">
+        <h1 id="game-title">بازی ریاضی تفنگی</h1>
+        <div id="game-stats" class="hidden">
+          <span id="score-display-container"
+            >امتیاز: <span id="score-display">0</span></span
+          >
+          <span id="timer-display-container"
+            >زمان: <span id="timer-display">--:--</span></span
+          >
+        </div>
+      </header>
+
+      <!-- ۵. محتوای اصلی بازی -->
+      <div id="game-content" class="hidden">
+        <div id="problem-display">
+          <span id="operand1">?</span>
+          <span id="operator">×</span>
+          <span id="operand2">?</span>
+          <span>=</span>
+          <span id="result-placeholder">?</span>
+        </div>
+        <div id="answer-grid">
+          <div class="answer-section" data-section="1">
+            <div class="shape"></div>
+            <span class="answer-number">0</span>
+          </div>
+          <div class="answer-section" data-section="2">
+            <div class="shape"></div>
+            <span class="answer-number">0</span>
+          </div>
+          <div class="answer-section" data-section="3">
+            <div class="shape"></div>
+            <span class="answer-number">0</span>
+          </div>
+          <div class="answer-section" data-section="4">
+            <div class="shape"></div>
+            <span class="answer-number">0</span>
+          </div>
+        </div>
+        <!-- *** محل نمایش فیدبک (استایل آن تغییر می‌کند) *** -->
+        <div id="feedback-message"></div>
+      </div>
+
+      <!-- ۶. صفحه پایان بازی -->
+      <div id="game-over-screen" class="prompt hidden">
+        <h2>بازی تمام شد!</h2>
+        <p id="final-result-message">نتیجه شما:</p>
+        <div class="mode-buttons">
+          <button id="play-again-button" class="game-mode-btn">
+            بازی دوباره (همین حالت)
+          </button>
+          <button id="change-mode-button" class="game-mode-btn">
+            انتخاب حالت جدید
+          </button>
+        </div>
+      </div>
+
+      <!-- ۷. فوتر -->
+      <footer id="main-footer" class="hidden">
+        <p>طراحی و تنظیم توسط: مصطفی بهنام فر</p>
+      </footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
