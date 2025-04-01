@@ -1,0 +1,261 @@
+/* تنظیمات کلی و فونت */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Vazirmatn', sans-serif; /* استفاده از فونت وزیرمتن */
+    overflow: hidden; /* جلوگیری از اسکرول */
+    background-color: #222; /* رنگ پس‌زمینه پیش‌فرض */
+    color: #fff;
+    direction: rtl; /* راست به چپ */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* ویدیو دوربین در پس‌زمینه */
+#camera-feed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* پوشش کامل صفحه بدون تغییر نسبت */
+    z-index: -1; /* قرار گرفتن پشت عناصر دیگر */
+    transform: scaleX(-1); /* آینه کردن تصویر (مانند وبکم) */
+}
+
+/* Canvas برای دیباگ (دیگر نشانگر انگشت را نمایش نمی‌دهد) */
+#output_canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* روی ویدیو، زیر overlay */
+    pointer-events: none; /* کلیک از روی آن رد شود */
+    transform: scaleX(-1); /* باید با ویدیو هماهنگ باشد */
+    /* opacity: 0.5; */ /* <<< اختیاری: اگر می‌خواهید خطوط دست کمرنگ‌تر باشند */
+}
+
+/* *** نشانگر انگشت (جدید) *** */
+#finger-indicator {
+    position: fixed; /* یا absolute اگر نسبت به game-overlay باشد */
+    width: 20px;    /* اندازه نشانگر */
+    height: 20px;
+    background-color: rgba(255, 255, 0, 0.85); /* رنگ زرد */
+    border: 1px solid rgba(0,0,0,0.5);      /* حاشیه کوچک */
+    border-radius: 50%; /* دایره */
+    z-index: 15; /* <<< بالاتر از game-overlay (z-index: 2) و feedback (z-index: 100) */
+    pointer-events: none; /* اجازه عبور کلیک و هاور */
+    display: none; /* شروع مخفی */
+    transform: translate(-50%, -50%); /* مرکز نشانگر روی مختصات قرار گیرد */
+    box-shadow: 0 0 8px rgba(255, 255, 0, 0.6); /* درخشش کم */
+    transition: top 0.03s linear, left 0.03s linear; /* حرکت نرم (اختیاری) */
+}
+
+
+/* لایه رویی بازی */
+#game-overlay {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around; /* توزیع فضا */
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: rgba(0, 0, 0, 0.1); /* کمی تیرگی روی ویدیو */
+    z-index: 2; /* بالاتر از کانواس, پایین تر از نشانگر */
+}
+
+/* پیام اجازه دسترسی */
+.prompt {
+    background-color: rgba(50, 50, 50, 0.85);
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 400px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 10; /* بالاتر از overlay, پایین تر از نشانگر و فیدبک */
+}
+.prompt h2 { margin-top: 0; color: #eee; }
+.prompt p i { color: #ccc; font-size: 0.9em; }
+.prompt button {
+    padding: 12px 25px; font-size: 1.1em; font-family: 'Vazirmatn', sans-serif;
+    background-color: #4CAF50; color: white; border: none; border-radius: 8px;
+    cursor: pointer; transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+.prompt button:hover:not(:disabled) { background-color: #45a049; }
+.prompt button:disabled { background-color: #aaa; cursor: not-allowed; opacity: 0.7; }
+.error { color: #ff6b6b; margin-top: 15px; font-weight: bold; min-height: 1.2em; }
+
+
+/* محتوای بازی */
+#game-content {
+    width: 100%; height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: space-around;
+}
+
+.hidden { display: none !important; }
+.active { display: block; } /* یا flex/grid */
+#permission-prompt.active,
+#game-mode-selection.active,
+#math-mode-selection.active,
+#game-over-screen.active { display: block; }
+
+#game-content.active {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding-top: 100px; /* افزایش فاصله برای هدر بزرگتر */
+    padding-bottom: 50px; height: 100vh; box-sizing: border-box;
+}
+#main-header.active, #main-footer.active { display: block; }
+
+
+/* نمایش سوال (با direction: ltr) */
+#problem-display {
+    background-color: rgba(0, 0, 0, 0.65); padding: 15px 30px; border-radius: 10px;
+    font-size: 2.5em; font-weight: bold; color: #fff; min-width: 250px;
+    text-align: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 25px; direction: ltr; /* <<< نمایش محتوا از چپ به راست >>> */
+}
+#problem-display span { display: inline-block; min-width: 30px; padding: 0 5px; text-align: center; vertical-align: middle; }
+#problem-display #operator { min-width: 20px; }
+
+
+/* شبکه چهار بخشی جواب‌ها */
+#answer-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr);
+    gap: 15px; width: clamp(300px, 70vw, 600px); height: clamp(280px, 55vh, 480px);
+    max-width: 90%;
+}
+
+/* هر بخش جواب */
+.answer-section {
+    background-color: rgba(255, 255, 255, 0.75); border-radius: 20px;
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); overflow: hidden; position: relative;
+}
+.answer-section.hand-hover {
+    transform: scale(1.08); background-color: rgba(200, 220, 255, 0.9);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* شکل داخل هر بخش (با position absolute) */
+.shape {
+    width: 60%; padding-bottom: 60%; background-color: rgba(60, 120, 200, 0.75);
+    border-radius: 50%; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); z-index: 1;
+}
+
+/* عدد جواب (با position absolute) */
+.answer-number {
+    font-size: 2.2em; font-weight: bold; color: #fff; position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); white-space: nowrap;
+}
+
+/* نوار پیشرفت نگه داشتن */
+.answer-section .hover-progress {
+    position: absolute; bottom: 0; left: 0; height: 8px;
+    background-color: #4CAF50; width: 0%; transition: width 0.05s linear;
+    border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 3;
+}
+
+
+/* *** پیام بازخورد (با انیمیشن) *** */
+#feedback-message {
+    position: fixed; /* ثابت */
+    bottom: 80px; /* کمی بالاتر از فوتر */
+    left: 50%;
+    padding: 14px 30px; /* کمی بزرگتر */
+    border-radius: 10px; /* گردی بیشتر */
+    font-size: 1.5em; /* بزرگتر */
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    min-width: 180px; /* حداقل عرض */
+    opacity: 0; /* <<< شروع نامرئی */
+    transform: translate(-50%, 20px); /* <<< شروع کمی پایین تر */
+    transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.3s ease; /* <<< انیمیشن نرم */
+    pointer-events: none; /* کلیک از روی آن رد شود */
+    z-index: 100; /* <<< بالاتر از اکثر عناصر */
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3); /* سایه */
+}
+
+#feedback-message.visible {
+    opacity: 1; /* << نمایش */
+    transform: translate(-50%, 0); /* << برگشت به موقعیت اصلی (انیمیشن بالا آمدن) */
+}
+
+#feedback-message.correct {
+    background-color: rgba(76, 175, 80, 0.9); /* سبز برای درست */
+}
+
+#feedback-message.incorrect {
+    background-color: rgba(244, 67, 54, 0.9); /* قرمز برای غلط */
+}
+/* ========================================= */
+
+/* انیمیشن لرزش */
+@keyframes shake {
+    0%, 100% { transform: translateX(0) scale(1.08); }
+    25% { transform: translateX(-5px) scale(1.08); }
+    75% { transform: translateX(5px) scale(1.08); }
+}
+.answer-section.hand-hover.shake {
+     animation: shake 0.3s ease-in-out;
+}
+
+/* استایل‌های بخش انتخاب حالت، نوع ریاضی، هدر، آمار، فوتر، پایان بازی (بدون تغییر نسبت به نسخه قبل) */
+.back-button { display: inline-block; margin-top: 20px; padding: 8px 15px; font-size: 0.9em; font-family: 'Vazirmatn', sans-serif; background-color: #7f8c8d; color: white; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.3s ease; }
+.back-button:hover { background-color: #95a5a6; }
+#game-mode-selection h2, #math-mode-selection h2 { margin-top: 0; margin-bottom: 20px; color: #eee;}
+#game-mode-selection .mode-buttons { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); max-width: 400px; display: grid; gap: 10px; width: 100%; margin: 0 auto;}
+.game-mode-btn { padding: 12px 10px; font-size: 1em; font-family: 'Vazirmatn', sans-serif; background-color: #e67e22; color: white; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.3s ease, transform 0.1s ease; text-align: center; }
+.game-mode-btn:hover { background-color: #d35400; transform: translateY(-2px); }
+.game-mode-btn:active { transform: translateY(0px); }
+#math-mode-selection .mode-buttons { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); max-width: 350px; display: grid; gap: 10px; width: 100%; margin: 0 auto; }
+.math-mode-btn { padding: 12px 10px; font-size: 1em; font-family: 'Vazirmatn', sans-serif; background-color: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.3s ease, transform 0.1s ease; text-align: center; }
+.math-mode-btn:hover { background-color: #2980b9; transform: translateY(-2px); }
+.math-mode-btn:active { transform: translateY(0px); }
+#main-header { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.7); color: #fff; padding: 10px 15px; border-radius: 10px; text-align: center; z-index: 5; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: 90%; max-width: 600px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
+#main-header h1 { margin: 0 0 8px 0; font-size: 1.4em; }
+#game-stats { display: flex; justify-content: space-around; width: 100%; max-width: 300px; background-color: rgba(255, 255, 255, 0.1); padding: 5px 10px; border-radius: 6px; font-size: 1em; font-weight: bold; }
+#game-stats.hidden { display: none !important; }
+#score-display-container, #timer-display-container { margin: 0 10px; color: #f1c40f; }
+#score-display, #timer-display { color: #fff; min-width: 30px; display: inline-block; text-align: left; direction: ltr; }
+#game-over-screen h2 { margin-top: 0; margin-bottom: 15px; color: #eee; }
+#final-result-message { font-size: 1.2em; font-weight: bold; margin-bottom: 25px; color: #f1c40f; }
+#game-over-screen .mode-buttons { grid-template-columns: 1fr 1fr; max-width: 350px; display: grid; gap: 10px; width: 100%; margin: 0 auto; }
+#main-footer { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.55); color: rgba(255, 255, 255, 0.8); padding: 6px 15px; border-radius: 5px; font-size: 0.8em; text-align: center; z-index: 5; }
+#main-footer p { margin: 0; }
+
+/* واکنش‌گرایی (شامل تنظیمات برای فیدبک و حالت‌های مختلف) */
+@media (max-width: 600px) {
+     #problem-display { font-size: 1.6em; padding: 10px 15px; min-width: 200px;}
+     .answer-number { font-size: 1.6em; }
+     #answer-grid { gap: 10px; height: clamp(240px, 50vh, 380px); }
+     .shape { width: 55%; padding-bottom: 55%; }
+
+     #main-header { top: 10px; padding: 8px 10px; }
+     #main-header h1 { font-size: 1.1em; margin-bottom: 5px;}
+     #game-stats { font-size: 0.9em; padding: 4px 8px; max-width: 250px; }
+     #score-display-container, #timer-display-container { margin: 0 5px; }
+
+     #game-content.active { padding-top: 90px; padding-bottom: 45px; }
+
+     .game-mode-btn, .math-mode-btn { font-size: 0.9em; padding: 10px 8px;}
+     #game-mode-selection .mode-buttons, #math-mode-selection .mode-buttons, #game-over-screen .mode-buttons { max-width: 90%; gap: 8px; }
+     #game-over-screen h2 {font-size: 1.3em;}
+     #final-result-message { font-size: 1.1em; margin-bottom: 20px;}
+
+     /* *** تنظیم فیدبک در موبایل *** */
+     #feedback-message { font-size: 1.2em; padding: 10px 20px; bottom: 60px; }
+
+     /* *** تنظیم نشانگر انگشت در موبایل (اگر لازم است) *** */
+     #finger-indicator { width: 16px; height: 16px; }
+
+     #main-footer { font-size: 0.7em; bottom: 5px; }
+}
