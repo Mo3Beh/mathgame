@@ -259,3 +259,42 @@ body {
 
      #main-footer { font-size: 0.7em; bottom: 5px; }
 }
+
+/* ... (تمام استایل‌های قبلی) ... */
+
+/* واکنش‌گرایی (شامل تنظیمات برای فیدبک و حالت‌های مختلف) */
+@media (max-width: 600px) {
+    #problem-display { font-size: 1.6em; padding: 10px 15px; min-width: 200px;}
+    .answer-number { font-size: 1.6em; }
+    #answer-grid { gap: 10px; height: clamp(240px, 50vh, 380px); }
+    .shape { width: 55%; padding-bottom: 55%; }
+
+    #main-header { top: 10px; padding: 8px 10px; }
+    #main-header h1 { font-size: 1.1em; margin-bottom: 5px;}
+    #game-stats { font-size: 0.9em; padding: 4px 8px; max-width: 250px; }
+    #score-display-container, #timer-display-container { margin: 0 5px; }
+
+    /* <<< تغییر اصلی برای مشکل فوتر >>> */
+    #game-content.active {
+        padding-top: 75px; /* فاصله بالا */
+        padding-bottom: 70px; /* افزایش فاصله پایین برای جا دادن فوتر */
+    }
+    /* <<< پایان تغییر اصلی >>> */
+
+    .game-mode-btn, .math-mode-btn { font-size: 0.9em; padding: 10px 8px;}
+    #game-mode-selection .mode-buttons, #math-mode-selection .mode-buttons, #game-over-screen .mode-buttons { max-width: 90%; gap: 8px; }
+    #game-over-screen h2 {font-size: 1.3em;}
+    #final-result-message { font-size: 1.1em; margin-bottom: 20px;}
+
+    #feedback-message { font-size: 1.2em; padding: 10px 20px; bottom: 60px; } /* موقعیت فیدبک بالای فوتر */
+    #finger-indicator { width: 16px; height: 16px; }
+
+    #main-footer {
+        font-size: 0.7em;
+        bottom: 5px; /* حفظ موقعیت پایین */
+        padding: 5px 10px; /* پدینگ برای خوانایی */
+        /* z-index: 5; */ /* اطمینان از اینکه روی محتوا باشد اگر لازم شد */
+    }
+}
+
+/* ... (بقیه استایل‌ها) ... */
