@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بازی ریاضی تفنگی</title> <!-- عنوان کلی‌تر -->
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <!-- کتابخانه‌های MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <video id="camera-feed" autoplay playsinline muted></video>
+    <canvas id="output_canvas"></canvas>
+
+    <div id="game-overlay">
+        <!-- === بخش انتخاب حالت بازی (جدید) === -->
+        <div id="mode-selection" class="prompt active"> <!-- شروع با این بخش فعال -->
+            <h2>انتخاب نوع بازی:</h2>
+            <div class="mode-buttons">
+                <button class="mode-btn" data-mode="add2">جمع ۲ رقمی</button>
+                <button class="mode-btn" data-mode="add3">جمع ۳ رقمی</button>
+                <button class="mode-btn" data-mode="subtract2">منها ۲ رقمی</button>
+                <button class="mode-btn" data-mode="multiply">ضرب</button>
+                <button class="mode-btn" data-mode="divide">تقسیم</button>
+            </div>
+            <p style="font-size: 0.8em; margin-top: 15px;">لطفاً یک حالت را برای شروع انتخاب کنید.</p>
+        </div>
+        <!-- ================================= -->
+
+        <!-- === بخش اجازه دسترسی (ابتدا مخفی) === -->
+        <div id="permission-prompt" class="prompt hidden">
+            <h2 id="permission-title">به دوربین نیاز داریم!</h2> <!-- عنوان تغییر می‌کند -->
+            <p>برای شروع بازی (<span id="selected-mode-info"></span>)، لطفاً اجازه دسترسی به دوربین را بدهید.</p>
+            <p><i>در حال بارگذاری مدل تشخیص دست...</i></p>
+            <button id="start-button" disabled>لطفاً صبر کنید...</button>
+            <p id="error-message" class="error"></p>
+        </div>
+        <!-- =================================== -->
+
+
+        <!-- === هدر (موقعیت ثابت) === -->
+        <header id="main-header" class="hidden"> <!-- ابتدا مخفی -->
+            <h1 id="game-title">بازی ریاضی تفنگی!</h1>
+            <p>با نگه داشتن دست مثل تفنگ و شلیک روی جواب درست، امتیاز بگیرید.</p>
+        </header>
+        <!-- ======================== -->
+
+        <!-- === محتوای اصلی بازی (ابتدا مخفی) === -->
+        <div id="game-content" class="hidden">
+            <div id="problem-display">
+                <span id="operand1">?</span>
+                <span id="operator">×</span> <!-- اپراتور هم یک span شد -->
+                <span id="operand2">?</span>
+                <span>=</span>
+                <span id="result-placeholder">?</span>
+            </div>
+            <div id="answer-grid">
+                <!-- بخش‌های جواب مثل قبل -->
+                <div class="answer-section" data-section="1"> <div class="shape"></div> <span class="answer-number">0</span> </div>
+                <div class="answer-section" data-section="2"> <div class="shape"></div> <span class="answer-number">0</span> </div>
+                <div class="answer-section" data-section="3"> <div class="shape"></div> <span class="answer-number">0</span> </div>
+                <div class="answer-section" data-section="4"> <div class="shape"></div> <span class="answer-number">0</span> </div>
+            </div>
+            <div id="feedback-message"></div>
+        </div>
+        <!-- ================================ -->
+
+        <!-- === فوتر (موقعیت ثابت) === -->
+        <footer id="main-footer" class="hidden"> <!-- ابتدا مخفی -->
+            <p>طراحی و تنظیم توسط: مصطفی بهنام فر</p>
+        </footer>
+        <!-- ======================== -->
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

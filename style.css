@@ -1,0 +1,608 @@
+/* تنظیمات کلی و فونت */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Vazirmatn', sans-serif; /* استفاده از فونت وزیرمتن */
+    overflow: hidden; /* جلوگیری از اسکرول */
+    background-color: #222; /* رنگ پس‌زمینه پیش‌فرض */
+    color: #fff;
+    direction: rtl; /* راست به چپ */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* ویدیو دوربین در پس‌زمینه */
+#camera-feed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* پوشش کامل صفحه بدون تغییر نسبت */
+    z-index: -1; /* قرار گرفتن پشت عناصر دیگر */
+    transform: scaleX(-1); /* آینه کردن تصویر (مانند وبکم) */
+}
+
+/* Canvas برای دیباگ */
+#output_canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* روی ویدیو، زیر overlay */
+    pointer-events: none; /* کلیک از روی آن رد شود */
+    transform: scaleX(-1); /* باید با ویدیو هماهنگ باشد */
+}
+
+
+/* لایه رویی بازی */
+#game-overlay {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around; /* توزیع فضا */
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: rgba(0, 0, 0, 0.1); /* کمی تیرگی روی ویدیو */
+    z-index: 2; /* بالاتر از کانواس */
+}
+
+/* پیام اجازه دسترسی */
+.prompt {
+    background-color: rgba(50, 50, 50, 0.85);
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 400px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 10; /* بالاتر از همه */
+}
+.prompt h2 {
+    margin-top: 0;
+    color: #eee;
+}
+.prompt p i {
+    color: #ccc;
+    font-size: 0.9em;
+}
+.prompt button {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    font-family: 'Vazirmatn', sans-serif;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+.prompt button:hover:not(:disabled) {
+    background-color: #45a049;
+}
+.prompt button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+.error {
+    color: #ff6b6b;
+    margin-top: 15px;
+    font-weight: bold;
+    min-height: 1.2em; /* فضایی برای پیام خطا */
+}
+
+
+/* محتوای بازی (مخفی تا شروع) */
+#game-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.hidden {
+    display: none !important; /* برای مخفی کردن اولیه */
+}
+
+
+
+/* نمایش سوال */
+#problem-display {
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 15px 30px;
+    border-radius: 10px;
+    font-size: 2.5em; /* اندازه بزرگ برای خوانایی */
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 20px; /* فاصله از شبکه جواب‌ها */
+    min-width: 200px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+#problem-display span {
+    display: inline-block;
+    min-width: 40px; /* حداقل عرض برای اعداد */
+    text-align: center;
+}
+
+
+/* شبکه چهار بخشی جواب‌ها */
+#answer-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* دو ستون مساوی */
+    grid-template-rows: repeat(2, 1fr);    /* دو ردیف مساوی */
+    gap: 15px; /* فاصله بین بخش‌ها */
+    width: clamp(300px, 70vw, 600px);  /* عرض واکنش‌گرا */
+    height: clamp(300px, 60vh, 500px); /* ارتفاع واکنش‌گرا */
+    max-width: 90%;
+}
+
+/* هر بخش جواب */
+.answer-section {
+    background-color: rgba(255, 255, 255, 0.75); /* پس‌زمینه نیمه‌شفاف */
+    border-radius: 20px; /* گوشه‌های گرد */
+    display: flex;
+    flex-direction: column; /* چیدمان عمودی */
+    justify-content: center;
+    align-items: center;
+    /* cursor: pointer; حذف شد چون با دست کار می‌کند */
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden; /* برای شکل داخلی و نوار پیشرفت */
+    position: relative; /* برای پوزیشن مطلق فرزندان */
+}
+
+/* استایل برای بخش جواب در حالت hover با دست */
+.answer-section.hand-hover {
+    transform: scale(1.08); /* کمی بزرگتر */
+    background-color: rgba(200, 220, 255, 0.9); /* رنگ آبی روشن‌تر برای hover */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+
+/* شکل داخل هر بخش (مثلا یک دایره) */
+.shape {
+    width: 50%;
+    padding-bottom: 50%; /* ایجاد مربع با ارتفاع مساوی عرض */
+    background-color: rgba(60, 120, 200, 0.7); /* رنگ شکل */
+    border-radius: 50%; /* تبدیل به دایره */
+    margin-bottom: 15px; /* فاصله از عدد */
+    position: absolute; /* اجازه می‌دهد عدد روی آن بیاید */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%); /* تنظیم موقعیت دقیق */
+    z-index: 1; /* زیر عدد */
+}
+
+/* عدد جواب */
+.answer-number {
+    font-size: 2.2em;
+    font-weight: bold;
+    color: #333; /* رنگ تیره برای کنتراست روی پس‌زمینه روشن */
+    z-index: 2; /* روی شکل قرار گیرد */
+    position: relative; /* برای z-index */
+    margin-top: 35%; /* پایین آوردن عدد */
+}
+
+/* نوار پیشرفت نگه داشتن */
+.answer-section .hover-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 8px;
+    background-color: #4CAF50; /* سبز */
+    width: 0%; /* شروع از صفر */
+    transition: width 0.05s linear; /* انیمیشن نرم و سریع برای پیشرفت */
+    border-bottom-left-radius: 15px; /* گردی گوشه پایین */
+    border-bottom-right-radius: 15px;
+    z-index: 3; /* روی همه چیز در بخش */
+}
+
+
+/* پیام بازخورد */
+#feedback-message {
+    position: fixed; /* ثابت در صفحه */
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 1.3em;
+    font-weight: bold;
+    color: white;
+    opacity: 0; /* شروع به صورت نامرئی */
+    transition: opacity 0.3s ease, background-color 0.3s ease;
+    pointer-events: none; /* کلیک از روی آن رد شود */
+    z-index: 100; /* بالاتر از همه */
+}
+
+#feedback-message.visible {
+    opacity: 1;
+}
+
+#feedback-message.correct {
+    background-color: rgba(76, 175, 80, 0.9); /* سبز برای درست */
+}
+
+#feedback-message.incorrect {
+    background-color: rgba(244, 67, 54, 0.9); /* قرمز برای غلط */
+}
+
+/* کلاس‌های کمکی برای انیمیشن ساده */
+@keyframes shake {
+    0%, 100% { transform: translateX(0) scale(1.08); } /* حفظ بزرگنمایی هاور */
+    25% { transform: translateX(-5px) scale(1.08); }
+    75% { transform: translateX(5px) scale(1.08); }
+}
+.answer-section.hand-hover.shake { /* فقط وقتی هاور است بلرزد */
+     animation: shake 0.3s ease-in-out;
+}
+
+
+/* واکنش‌گرایی ساده */
+@media (max-width: 600px) {
+    #problem-display {
+        font-size: 1.8em;
+        padding: 10px 20px;
+    }
+    .answer-number {
+        font-size: 1.8em;
+    }
+    #answer-grid {
+        gap: 10px;
+    }
+     .shape {
+        width: 45%;
+        padding-bottom: 45%;
+    }
+    #feedback-message {
+        font-size: 1.1em;
+        bottom: 15px;
+    }
+}
+/* ... (تمام استایل‌های قبلی) ... */
+
+/* استایل Canvas (قبلا در HTML بود، اینجا بهتر است) */
+#output_canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* روی ویدیو، زیر overlay */
+    pointer-events: none; /* کلیک از روی آن رد شود */
+    transform: scaleX(-1); /* باید با ویدیو هماهنگ باشد */
+}
+
+/* استایل هدر */
+#main-header {
+    position: absolute; /* موقعیت مطلق نسبت به game-overlay */
+    top: 20px; /* فاصله از بالا */
+    left: 50%;
+    transform: translateX(-50%); /* برای وسط‌چین کردن دقیق */
+    background-color: rgba(0, 0, 0, 0.6); /* پس‌زمینه نیمه‌شفاف */
+    color: #fff;
+    padding: 10px 25px;
+    border-radius: 10px;
+    text-align: center;
+    z-index: 5; /* بالاتر از canvas، پایین‌تر از prompt و feedback */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#main-header h1 {
+    margin: 0 0 5px 0; /* حذف مارجین بالا و پایین، کمی فاصله پایین */
+    font-size: 1.6em;
+}
+
+#main-header p {
+    margin: 0;
+    font-size: 0.9em;
+    opacity: 0.9; /* کمی شفاف‌تر از عنوان */
+}
+
+/* استایل فوتر */
+#main-footer {
+    position: absolute; /* موقعیت مطلق نسبت به game-overlay */
+    bottom: 10px; /* فاصله از پایین */
+    left: 50%;
+    transform: translateX(-50%); /* وسط‌چین کردن */
+    background-color: rgba(0, 0, 0, 0.5);
+    color: rgba(255, 255, 255, 0.8); /* کمی رنگ روشن‌تر و شفاف */
+    padding: 5px 15px;
+    border-radius: 5px;
+    font-size: 0.8em;
+    text-align: center;
+    z-index: 5;
+}
+
+#main-footer p {
+    margin: 0; /* حذف مارجین پیش‌فرض پاراگراف */
+}
+
+/* تنظیمات واکنش‌گرایی برای هدر و فوتر (اختیاری) */
+@media (max-width: 600px) {
+    #main-header h1 {
+        font-size: 1.3em;
+    }
+    #main-header p {
+        font-size: 0.8em;
+    }
+    #main-header {
+        padding: 8px 15px;
+        top: 15px;
+    }
+    #main-footer {
+        font-size: 0.7em;
+        padding: 4px 10px;
+        bottom: 5px;
+    }
+    /* ممکن است لازم باشد فاصله grid را کمی بیشتر کنید تا با هدر تداخل نکند */
+     #game-content {
+        padding-top: 80px; /* کمی فضا برای هدر */
+        padding-bottom: 40px; /* کمی فضا برای فوتر */
+        justify-content: center; /* ممکن است بهتر باشد */
+     }
+     #answer-grid{
+         /* ممکن است نیاز باشد height grid کمی کمتر شود */
+         height: clamp(250px, 55vh, 450px);
+     }
+}
+
+/* ... (تمام استایل‌های قبلی تا انتهای @media) ... */
+
+/* ===== استایل‌های جدید و تغییرات ===== */
+
+/* مخفی کردن/نمایش المان‌ها */
+.hidden {
+    display: none !important;
+}
+.active {
+    display: block; /* یا flex/grid بسته به والد */
+}
+#permission-prompt.active,
+#mode-selection.active {
+    display: block; /* چون اینها prompt هستند */
+}
+#game-content.active {
+    display: flex; /* چون والد محتوای بازی است */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* تغییر به center برای کنترل بهتر فاصله */
+    padding-top: 90px;  /* <<< فاصله از بالا برای هدر >>> */
+    padding-bottom: 50px; /* <<< فاصله از پایین برای فوتر >>> */
+    height: 100vh; /* اطمینان از گرفتن کل ارتفاع */
+    box-sizing: border-box; /* padding شامل ارتفاع شود */
+}
+#main-header.active,
+#main-footer.active {
+     display: block; /* نمایش هدر و فوتر */
+}
+
+
+/* استایل بخش انتخاب حالت */
+#mode-selection h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #eee;
+}
+.mode-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* دکمه‌های واکنش‌گرا */
+    gap: 10px; /* فاصله بین دکمه‌ها */
+    width: 100%;
+    max-width: 350px; /* حداکثر عرض برای دکمه‌ها */
+    margin: 0 auto; /* وسط‌چین کردن grid */
+}
+.mode-btn {
+    padding: 12px 10px;
+    font-size: 1em;
+    font-family: 'Vazirmatn', sans-serif;
+    background-color: #3498db; /* آبی */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    text-align: center;
+}
+.mode-btn:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+.mode-btn:active {
+     transform: translateY(0px);
+}
+
+
+/* تنظیمات هدر و فوتر (مثل قبل، فقط مطمئن شوید z-index مناسب است) */
+#main-header {
+    position: absolute;
+    top: 15px; /* کمی پایین‌تر آوردم */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.65); /* کمی پررنگ‌تر */
+    color: #fff;
+    padding: 10px 25px;
+    border-radius: 10px;
+    text-align: center;
+    z-index: 5; /* باید زیر prompt و feedback باشد */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    width: 80%; /* عرض بیشتر برای جلوگیری از شکستن خط */
+    max-width: 500px;
+    box-sizing: border-box;
+}
+#main-header h1 { margin: 0 0 5px 0; font-size: 1.5em; }
+#main-header p { margin: 0; font-size: 0.9em; opacity: 0.9; }
+
+#main-footer {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.55);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 6px 15px;
+    border-radius: 5px;
+    font-size: 0.8em;
+    text-align: center;
+    z-index: 5;
+}
+#main-footer p { margin: 0; }
+
+/* تنظیم مجدد فاصله grid در game-content */
+#game-content #answer-grid {
+    /* ارتفاع را کمی کمتر می‌کنیم چون game-content پدینگ گرفته */
+    height: clamp(280px, 55vh, 480px);
+    margin-top: 20px; /* فاصله سوال از گرید */
+    margin-bottom: 20px; /* فاصله گرید از پایین (قبل از فوتر) */
+}
+
+/* واکنش‌گرایی برای حالت موبایل */
+@media (max-width: 600px) {
+     /* ... (استایل‌های قبلی @media) ... */
+     #main-header { top: 10px; padding: 8px 15px; }
+     #main-header h1 { font-size: 1.2em; }
+     #main-header p { font-size: 0.8em; }
+     #main-footer { font-size: 0.7em; bottom: 5px; }
+
+     #game-content {
+         padding-top: 75px; /* تنظیم دقیق‌تر فاصله */
+         padding-bottom: 45px;
+     }
+     #game-content #answer-grid {
+        height: clamp(250px, 50vh, 400px); /* ارتفاع کمتر در موبایل */
+        gap: 8px; /* فاصله کمتر بین باکس‌ها */
+     }
+     #problem-display { font-size: 1.8em; padding: 10px 15px;}
+     .answer-number { font-size: 1.8em; }
+     .shape { width: 45%; padding-bottom: 45%; margin-top: -5px;} /* کمی بالاتر بردن شکل */
+     .answer-number { margin-top: 30%;} /* تنظیم مجدد عدد */
+}
+
+/* ... (تمام استایل‌های قبلی تا انتهای body) ... */
+
+.hidden { display: none !important; }
+.active { display: block; }
+#permission-prompt.active, #mode-selection.active { display: block; }
+#game-content.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 90px;
+    padding-bottom: 50px;
+    height: 100vh;
+    box-sizing: border-box;
+}
+#main-header.active, #main-footer.active { display: block; }
+
+
+/* نمایش سوال *** با تغییر direction *** */
+#problem-display {
+    background-color: rgba(0, 0, 0, 0.65); /* کمی پررنگ تر */
+    padding: 15px 30px;
+    border-radius: 10px;
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #fff;
+    min-width: 250px; /* کمی بزرگتر برای جا شدن اعداد بزرگتر */
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 25px; /* کمی فاصله بیشتر از گرید */
+    direction: ltr; /* <<< تغییر اصلی: نمایش محتوا از چپ به راست >>> */
+}
+#problem-display span {
+    display: inline-block;
+    min-width: 30px; /* کمی کمتر */
+    padding: 0 5px; /* کمی فاصله بین اعداد و عملگر */
+    text-align: center;
+    vertical-align: middle; /* تراز عمودی بهتر */
+}
+#problem-display #operator {
+    min-width: 20px; /* عرض کمتر برای عملگر */
+}
+
+
+/* شبکه چهار بخشی جواب‌ها */
+#answer-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 15px;
+    width: clamp(300px, 70vw, 600px);
+    height: clamp(280px, 55vh, 480px);
+    max-width: 90%;
+    /* margin-top/bottom در game-content تنظیم شد */
+}
+
+/* هر بخش جواب */
+.answer-section {
+    background-color: rgba(255, 255, 255, 0.75);
+    border-radius: 20px;
+    /* display: flex; حذف شد چون با absolute position کار می‌کنیم */
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative; /* <<< مهم برای position: absolute فرزندان >>> */
+}
+.answer-section.hand-hover {
+    transform: scale(1.08);
+    background-color: rgba(200, 220, 255, 0.9);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+
+/* شکل داخل هر بخش *** با تغییر position *** */
+.shape {
+    width: 60%; /* کمی بزرگتر برای جا دادن عدد */
+    padding-bottom: 60%; /* مربع نگه داشتن */
+    background-color: rgba(60, 120, 200, 0.75); /* کمی پررنگ‌تر */
+    border-radius: 50%;
+    position: absolute; /* <<< تغییر >>> */
+    top: 50%;         /* <<< تغییر >>> */
+    left: 50%;        /* <<< تغییر >>> */
+    transform: translate(-50%, -50%); /* <<< تغییر: وسط‌چین دقیق >>> */
+    z-index: 1; /* زیر عدد */
+    /* margin-bottom حذف شد */
+}
+
+/* عدد جواب *** با تغییر position و حذف margin *** */
+.answer-number {
+    font-size: 2.2em; /* اندازه ممکن است نیاز به تنظیم دقیق‌تر داشته باشد */
+    font-weight: bold;
+    color: #fff; /* سفید برای کنتراست بهتر روی آبی */
+    position: absolute; /* <<< تغییر >>> */
+    top: 50%;         /* <<< تغییر >>> */
+    left: 50%;        /* <<< تغییر >>> */
+    transform: translate(-50%, -50%); /* <<< تغییر: وسط‌چین دقیق >>> */
+    z-index: 2; /* روی شکل */
+    margin-top: 0; /* <<< حذف شد >>> */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* خوانایی بهتر عدد */
+    /* line-height: 1; ممکن است برای تراز عمودی دقیق‌تر کمک کند */
+    white-space: nowrap; /* جلوگیری از شکستن اعداد بزرگ */
+}
+
+
+/* واکنش‌گرایی */
+@media (max-width: 600px) {
+    /* ... (استایل‌های قبلی @media) ... */
+     #problem-display { font-size: 1.6em; padding: 10px 15px; min-width: 200px;} /* کمی کوچکتر */
+     .answer-number { font-size: 1.6em; } /* کمی کوچکتر */
+     #answer-grid { gap: 10px; height: clamp(240px, 50vh, 380px); }
+     .shape { width: 55%; padding-bottom: 55%; } /* کمی کوچکتر */
+
+    /* بقیه استایل‌های واکنش‌گرایی مثل قبل */
+     #main-header { top: 10px; padding: 8px 15px; }
+     #main-header h1 { font-size: 1.2em; }
+     #main-header p { font-size: 0.8em; }
+     #main-footer { font-size: 0.7em; bottom: 5px; }
+     #game-content.active { padding-top: 75px; padding-bottom: 45px; }
+}
